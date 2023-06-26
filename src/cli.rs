@@ -11,6 +11,6 @@ pub struct Cli {
     pub depth: usize,
     #[arg(short, long)]
     pub words: Option<String>,
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = 20)]
     pub max_results: usize,
 }

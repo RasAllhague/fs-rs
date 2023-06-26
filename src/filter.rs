@@ -43,7 +43,7 @@ impl FileContentFilter {
     pub fn new(words: &[&str]) -> Self {
         let words = words.iter().map(|x| x.to_string()).collect();
 
-        Self { words}
+        Self { words }
     }
 
     fn check_content(&self, file_path: &str) -> bool {

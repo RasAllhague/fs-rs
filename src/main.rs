@@ -15,33 +15,39 @@ fn main() {
 
 fn run(cli: Cli) {
     let filters = create_filters(&cli);
-    let (results, duration) = run_search(filters, cli);
-    display_results(results, duration);
+    let (results, duration) = run_search(filters, &cli);
+    display_results(results, duration, cli.max_results);
 }
 
-fn display_results(results: Vec<SearchResult>, duration: std::time::Duration) {
-    for result in results.clone() {
+fn display_results(results: Vec<SearchResult>, duration: std::time::Duration, max_results: usize) {
+    println!(
+        "Displaying max {} out of {} results:",
+        max_results,
+        results.len()
+    );
+
+    for (i, result) in results.iter().take(max_results).enumerate() {
         match result {
             SearchResult::Directory {
                 path,
                 name,
                 metadata: _,
-            } => println!("Dir: {:?}, path: {:?}", name, path),
+            } => println!("({i}) Dir: {:?}, path: {:?}", name, path),
             SearchResult::File {
                 path,
                 name,
                 metadata: _,
-            } => println!("File: {:?}, path: {:?}", name, path),
+            } => println!("({i}) File: {:?}, path: {:?}", name, path),
             SearchResult::SymLink {
                 path,
                 name,
                 metadata: _,
-            } => println!("SymLink: {:?}, path: {:?}", name, path),
+            } => println!("({i}) SymLink: {:?}, path: {:?}", name, path),
         }
     }
 
     println!(
-        "Needed {}s for finding '{}' items.",
+        "Needed {}s for finding '{}' results.",
         duration.as_secs(),
         results.len()
     );
@@ -49,7 +55,7 @@ fn display_results(results: Vec<SearchResult>, duration: std::time::Duration) {
 
 fn run_search(
     filters: Vec<Box<dyn SearchFilter>>,
-    cli: Cli,
+    cli: &Cli,
 ) -> (Vec<SearchResult>, std::time::Duration) {
     let searcher = FileSearcher::new(filters, cli.depth);
 
