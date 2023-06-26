@@ -59,15 +59,16 @@ fn run_search(
 ) -> (Vec<SearchResult>, std::time::Duration) {
     let searcher = FileSearcher::new(filters, cli.depth);
 
-    let paths = cli
-        .search_paths
-        .split('|')
-        .into_iter()
-        .collect::<Vec<&str>>();
-
+    println!("Searching...");
+    
+    let paths: Vec<&str> = cli.search_paths.iter().map(|x| x.as_str()).collect();
+    
     let start = Instant::now();
     let results = searcher.search_paths(&paths);
     let duration = start.elapsed();
+
+    println!("Finished searching...");
+    
     (results, duration)
 }
 
@@ -75,13 +76,13 @@ fn create_filters(cli: &Cli) -> Vec<Box<dyn SearchFilter>> {
     let mut filters: Vec<Box<dyn SearchFilter>> = Vec::new();
 
     if let Some(names) = cli.names.clone() {
-        let names = names.split('|').into_iter().collect::<Vec<&str>>();
+        let names: Vec<&str> = names.iter().map(|x| x.as_str()).collect();
         let name_filter = FilenameFilter::new(&names);
         filters.push(Box::new(name_filter));
     }
 
     if let Some(words) = cli.words.clone() {
-        let words = words.split('|').into_iter().collect::<Vec<&str>>();
+        let words: Vec<&str> = words.iter().map(|x| x.as_str()).collect();
         let file_content_filter = FileContentFilter::new(&words);
         filters.push(Box::new(file_content_filter));
     }
