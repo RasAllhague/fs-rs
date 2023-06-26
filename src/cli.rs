@@ -4,7 +4,13 @@ use clap::{command, Parser};
 #[command(author, version, about)]
 pub struct Cli {
     #[arg(short, long)]
-    pub paths: String,
+    pub search_paths: String,
     #[arg(short, long)]
-    pub name_filter: String,
+    pub names: Option<String>,
+    #[arg(short, long, default_value_t = 10000)]
+    pub depth: usize,
+    #[arg(short, long)]
+    pub words: Option<String>,
+    #[arg(short, long)]
+    pub max_results: usize,
 }

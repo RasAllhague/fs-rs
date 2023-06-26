@@ -1,4 +1,12 @@
+use std::fs;
+
 use walkdir::DirEntry;
+
+pub enum MatchOptions {
+    All,
+    Any,
+    Exact,
+}
 
 pub trait SearchFilter {
     fn check_filter(&self, dir_entry: &DirEntry) -> bool;
@@ -22,6 +30,34 @@ impl SearchFilter for FilenameFilter {
 
         match name {
             Some(n) => self.file_names.iter().any(|x| n.contains(x)),
+            None => false,
+        }
+    }
+}
+
+pub struct FileContentFilter {
+    words: Vec<String>,
+}
+
+impl FileContentFilter {
+    pub fn new(words: &[&str]) -> Self {
+        let words = words.iter().map(|x| x.to_string()).collect();
+
+        Self { words}
+    }
+
+    fn check_content(&self, file_path: &str) -> bool {
+        match fs::read_to_string(file_path) {
+            Ok(c) => self.words.iter().any(|x| c.contains(x)),
+            Err(_) => false,
+        }
+    }
+}
+
+impl SearchFilter for FileContentFilter {
+    fn check_filter(&self, dir_entry: &DirEntry) -> bool {
+        match dir_entry.path().to_str() {
+            Some(f) => self.check_content(f),
             None => false,
         }
     }

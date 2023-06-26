@@ -1,16 +1,22 @@
-use std::ffi::OsString;
+use std::{ffi::OsString, fs::Metadata};
 
 use walkdir::{DirEntry, WalkDir};
 
 use crate::filter::SearchFilter;
 
+pub enum SearchMode {
+    TopLevelOnly,
+    Recursive,
+}
+
 pub struct FileSearcher {
     filters: Vec<Box<dyn SearchFilter>>,
+    max_depth: usize,
 }
 
 impl FileSearcher {
-    pub fn new(filters: Vec<Box<dyn SearchFilter>>) -> Self {
-        Self { filters }
+    pub fn new(filters: Vec<Box<dyn SearchFilter>>, max_depth: usize) -> Self {
+        Self { filters, max_depth }
     }
 
     pub fn search_paths(&self, paths: &[&str]) -> Vec<SearchResult> {
@@ -19,6 +25,7 @@ impl FileSearcher {
 
     fn search_path(&self, path: &str) -> Vec<SearchResult> {
         WalkDir::new(path)
+            .max_depth(self.max_depth)
             .into_iter()
             .filter(|x| x.is_ok())
             .map(|e| e.unwrap())
@@ -40,18 +47,43 @@ impl FileSearcher {
 
 fn map_filetype(dir_entry: DirEntry) -> SearchResult {
     if dir_entry.file_type().is_file() {
-        return SearchResult::File(dir_entry.file_name().to_os_string());
+        return SearchResult::File {
+            path: dir_entry.path().as_os_str().to_os_string(),
+            name: dir_entry.file_name().to_os_string(),
+            metadata: dir_entry.metadata().ok(),
+        };
     }
 
     if dir_entry.file_type().is_dir() {
-        return SearchResult::Directory(dir_entry.file_name().to_os_string());
+        return SearchResult::Directory {
+            path: dir_entry.path().as_os_str().to_os_string(),
+            name: dir_entry.file_name().to_os_string(),
+            metadata: dir_entry.metadata().ok(),
+        };
     }
 
-    SearchResult::SymLink(dir_entry.file_name().to_os_string())
+    SearchResult::SymLink {
+        path: dir_entry.path().as_os_str().to_os_string(),
+        name: dir_entry.file_name().to_os_string(),
+        metadata: dir_entry.metadata().ok(),
+    }
 }
 
+#[derive(Clone, Debug)]
 pub enum SearchResult {
-    Directory(OsString),
-    File(OsString),
-    SymLink(OsString),
+    Directory {
+        path: OsString,
+        name: OsString,
+        metadata: Option<Metadata>,
+    },
+    File {
+        path: OsString,
+        name: OsString,
+        metadata: Option<Metadata>,
+    },
+    SymLink {
+        path: OsString,
+        name: OsString,
+        metadata: Option<Metadata>,
+    },
 }
