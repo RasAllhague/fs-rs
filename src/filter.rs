@@ -12,9 +12,7 @@ impl FilenameFilter {
     pub fn new(file_names: &[&str]) -> Self {
         let file_names = file_names.iter().map(|x| x.to_string()).collect();
 
-        Self {
-            file_names
-        }
+        Self { file_names }
     }
 }
 
