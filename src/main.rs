@@ -25,7 +25,7 @@ static DELETE_ENTRIES: &str = "Delete entries";
 fn main() -> Result<(), FsRsError> {
     let cli = Cli::parse();
 
-    if cli.search_paths.len() == 0 {
+    if cli.search_paths.is_empty() {
         print_error("You have to provide atleast one search path!")?;
         return Ok(());
     }

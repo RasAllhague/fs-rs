@@ -21,8 +21,8 @@ pub struct MoveEntriesDialogue;
 pub struct DeleteEntriesDialogue;
 
 impl CopyEntriesDialogue {
-    pub fn show(results: &Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-        let selected = MultiSelect::new("Which entries do you want to copy?", results.clone())
+    pub fn show(results: &[SearchResult], max_results: usize) -> Result<(), FsRsError> {
+        let selected = MultiSelect::new("Which entries do you want to copy?", results.to_vec())
             .with_page_size(max_results)
             .prompt_skippable()?;
 
@@ -70,10 +70,10 @@ impl CopyEntriesDialogue {
 }
 
 impl ShowEntriesDialogue {
-    pub fn show(results: &Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
+    pub fn show(results: &[SearchResult], max_results: usize) -> Result<(), FsRsError> {
         let selected = MultiSelect::new(
             "Which entries do you want to see details from?",
-            results.clone(),
+            results.to_vec(),
         )
         .with_page_size(max_results)
         .prompt_skippable()?;
@@ -89,8 +89,8 @@ impl ShowEntriesDialogue {
 }
 
 impl OpenEntriesDialogue {
-    pub fn show(results: &Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-        let selected = MultiSelect::new("Which entries do you want to open?", results.clone())
+    pub fn show(results: &[SearchResult], max_results: usize) -> Result<(), FsRsError> {
+        let selected = MultiSelect::new("Which entries do you want to open?", results.to_vec())
             .with_page_size(max_results)
             .prompt_skippable()?;
 
@@ -113,8 +113,8 @@ impl OpenEntriesDialogue {
 }
 
 impl RevealEntriesDialogue {
-    pub fn show(results: &Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-        let selected = MultiSelect::new("Which entries do you want to open?", results.clone())
+    pub fn show(results: &[SearchResult], max_results: usize) -> Result<(), FsRsError> {
+        let selected = MultiSelect::new("Which entries do you want to open?", results.to_vec())
             .with_page_size(max_results)
             .prompt_skippable()?;
 
@@ -137,8 +137,8 @@ impl RevealEntriesDialogue {
 }
 
 impl MoveEntriesDialogue {
-    pub fn show(results: &Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-        let selected = MultiSelect::new("Which entries do you want to move?", results.clone())
+    pub fn show(results: &[SearchResult], max_results: usize) -> Result<(), FsRsError> {
+        let selected = MultiSelect::new("Which entries do you want to move?", results.to_vec())
             .with_page_size(max_results)
             .prompt_skippable()?;
 
@@ -185,9 +185,9 @@ impl MoveEntriesDialogue {
 }
 
 impl DeleteEntriesDialogue {
-    pub fn show(results: &Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
+    pub fn show(results: &[SearchResult], max_results: usize) -> Result<(), FsRsError> {
         let selected =
-            MultiSelect::new("Which entries do you want to see delete?", results.clone())
+            MultiSelect::new("Which entries do you want to see delete?", results.to_vec())
                 .with_page_size(max_results)
                 .prompt_skippable()?;
 

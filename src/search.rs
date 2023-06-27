@@ -34,7 +34,7 @@ impl FileSearcher {
     }
 
     fn check_filters(&self, dir_entry: &DirEntry) -> bool {
-        if self.filters.len() == 0 {
+        if self.filters.is_empty() {
             return true;
         }
 
