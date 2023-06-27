@@ -1,4 +1,4 @@
-use std::{ffi::OsString, fs::Metadata};
+use std::{ffi::OsString, fmt::Display, fs::Metadata};
 
 use walkdir::{DirEntry, WalkDir};
 
@@ -86,4 +86,43 @@ pub enum SearchResult {
         name: OsString,
         metadata: Option<Metadata>,
     },
+}
+
+impl SearchResult {
+    pub fn path(&self) -> OsString {
+        match self {
+            SearchResult::Directory { path, name: _, metadata: _ } => path.clone(),
+            SearchResult::File { path, name: _, metadata: _ } => path.clone(),
+            SearchResult::SymLink { path, name: _, metadata: _ } => path.clone(),
+        }
+    }
+}
+
+impl Display for SearchResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SearchResult::Directory {
+                path,
+                name,
+                metadata: _,
+            } => write!(f, "(D): {:?}, path: {:?}", name, truncate(path.to_str().unwrap_or("Not parsable"), 50)),
+            SearchResult::File {
+                path,
+                name,
+                metadata: _,
+            } => write!(f, "(f): {:?}, path: {:?}", name, truncate(path.to_str().unwrap_or("Not parsable"), 50)),
+            SearchResult::SymLink {
+                path,
+                name,
+                metadata: _,
+            } => write!(f, "(s): {:?}, path: {:?}", name, truncate(path.to_str().unwrap_or("Not parsable"), 50)),
+        }
+    }
+}
+
+fn truncate(s: &str, max_chars: usize) -> &str {
+    match s.char_indices().nth(max_chars) {
+        None => s,
+        Some((idx, _)) => &s[..idx],
+    }
 }

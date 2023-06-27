@@ -11,6 +11,6 @@ pub struct Cli {
     pub depth: usize,
     #[arg(short, long)]
     pub words: Option<Vec<String>>,
-    #[arg(short, long, default_value_t = 20)]
+    #[arg(short, long, default_value_t = 10)]
     pub max_results: usize,
 }
