@@ -91,9 +91,21 @@ pub enum SearchResult {
 impl SearchResult {
     pub fn path(&self) -> OsString {
         match self {
-            SearchResult::Directory { path, name: _, metadata: _ } => path.clone(),
-            SearchResult::File { path, name: _, metadata: _ } => path.clone(),
-            SearchResult::SymLink { path, name: _, metadata: _ } => path.clone(),
+            SearchResult::Directory {
+                path,
+                name: _,
+                metadata: _,
+            } => path.clone(),
+            SearchResult::File {
+                path,
+                name: _,
+                metadata: _,
+            } => path.clone(),
+            SearchResult::SymLink {
+                path,
+                name: _,
+                metadata: _,
+            } => path.clone(),
         }
     }
 }
@@ -105,17 +117,32 @@ impl Display for SearchResult {
                 path,
                 name,
                 metadata: _,
-            } => write!(f, "(D): {:?}, path: {:?}", name, truncate(path.to_str().unwrap_or("Not parsable"), 50)),
+            } => write!(
+                f,
+                "(D): {:?}, path: {:?}",
+                name,
+                truncate(path.to_str().unwrap_or("Not parsable"), 50)
+            ),
             SearchResult::File {
                 path,
                 name,
                 metadata: _,
-            } => write!(f, "(f): {:?}, path: {:?}", name, truncate(path.to_str().unwrap_or("Not parsable"), 50)),
+            } => write!(
+                f,
+                "(f): {:?}, path: {:?}",
+                name,
+                truncate(path.to_str().unwrap_or("Not parsable"), 50)
+            ),
             SearchResult::SymLink {
                 path,
                 name,
                 metadata: _,
-            } => write!(f, "(s): {:?}, path: {:?}", name, truncate(path.to_str().unwrap_or("Not parsable"), 50)),
+            } => write!(
+                f,
+                "(s): {:?}, path: {:?}",
+                name,
+                truncate(path.to_str().unwrap_or("Not parsable"), 50)
+            ),
         }
     }
 }
