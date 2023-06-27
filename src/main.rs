@@ -1,6 +1,10 @@
-use std::time::Instant;
+use std::{io::stdout, time::Instant};
 
 use clap::Parser;
+use crossterm::{
+    execute,
+    style::{Color, Print, ResetColor, SetForegroundColor},
+};
 use fs_rs::{
     cli::Cli,
     filter::{FileContentFilter, FilenameFilter, SearchFilter},
@@ -19,56 +23,22 @@ fn run(cli: Cli) {
     display_results(results, duration, cli.max_results);
 }
 
-fn display_results(results: Vec<SearchResult>, duration: std::time::Duration, max_results: usize) {
-    println!(
-        "Displaying max {} out of {} results:",
-        max_results,
-        results.len()
-    );
-
-    for (i, result) in results.iter().take(max_results).enumerate() {
-        match result {
-            SearchResult::Directory {
-                path,
-                name,
-                metadata: _,
-            } => println!("({i}) Dir: {:?}, path: {:?}", name, path),
-            SearchResult::File {
-                path,
-                name,
-                metadata: _,
-            } => println!("({i}) File: {:?}, path: {:?}", name, path),
-            SearchResult::SymLink {
-                path,
-                name,
-                metadata: _,
-            } => println!("({i}) SymLink: {:?}, path: {:?}", name, path),
-        }
-    }
-
-    println!(
-        "Needed {}s for finding '{}' results.",
-        duration.as_secs(),
-        results.len()
-    );
-}
-
 fn run_search(
     filters: Vec<Box<dyn SearchFilter>>,
     cli: &Cli,
 ) -> (Vec<SearchResult>, std::time::Duration) {
     let searcher = FileSearcher::new(filters, cli.depth);
 
-    println!("Searching...");
-    
+    print_message("Searching...");
+
     let paths: Vec<&str> = cli.search_paths.iter().map(|x| x.as_str()).collect();
-    
+
     let start = Instant::now();
     let results = searcher.search_paths(&paths);
     let duration = start.elapsed();
 
-    println!("Finished searching...");
-    
+    print_message("Finished searching...");
+
     (results, duration)
 }
 
@@ -88,4 +58,54 @@ fn create_filters(cli: &Cli) -> Vec<Box<dyn SearchFilter>> {
     }
 
     filters
+}
+
+fn display_results(results: Vec<SearchResult>, duration: std::time::Duration, max_results: usize) {
+    print_message(&format!(
+        "Displaying max {} out of {} results:",
+        max_results,
+        results.len()
+    ));
+
+    for (i, result) in results.iter().take(max_results).enumerate() {
+        print_search_result(result, i);
+    }
+
+    print_message(&format!(
+        "Needed {}s for finding '{}' results.",
+        duration.as_secs(),
+        results.len()
+    ));
+}
+
+fn print_message(message: &str) {
+    execute!(
+        stdout(),
+        SetForegroundColor(Color::Grey),
+        Print(message),
+        ResetColor
+    )
+    .unwrap();
+}
+
+fn print_search_result(search_result: &SearchResult, index: usize) {
+    let message = match search_result {
+        SearchResult::Directory {
+            path,
+            name,
+            metadata: _,
+        } => format!("({index}) Dir: {:?}, path: {:?}", name, path),
+        SearchResult::File {
+            path,
+            name,
+            metadata: _,
+        } => format!("({index}) File: {:?}, path: {:?}", name, path),
+        SearchResult::SymLink {
+            path,
+            name,
+            metadata: _,
+        } => format!("({index}) SymLink: {:?}, path: {:?}", name, path),
+    };
+
+    print_message(&message);
 }
