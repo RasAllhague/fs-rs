@@ -1,33 +1,30 @@
-use std::{fs, io::stdout, time::Instant};
+use std::time::Instant;
 
 use clap::Parser;
-use crossterm::{
-    execute,
-    style::{Color, Print, ResetColor, SetForegroundColor},
-};
+
 use fs_rs::{
-    cli::Cli,
-    filter::{FileContentFilter, FilenameFilter, SearchFilter},
-    search::{FileSearcher, SearchResult},
-    SearchError,
+    cli::{Cli, Search},
+    filter::{FileContentFilter, FilenameFilter, SearchFilter, EntryTypeFilter},
+    search::{FileSearcher, SearchResult}, error::FsRsError, displaying::{print_message, print_error}, dialogue::{DeleteEntriesDialogue, MoveEntriesDialogue, CopyEntriesDialogue, ShowEntriesDialogue, OpenEntriesDialogue, RevealEntriesDialogue},
 };
-use inquire::{Confirm, InquireError, MultiSelect, Select};
+use inquire::{Select, Confirm};
 
 static OPEN_ENTRY: &str = "Open entries";
 static SHOW_DETAILS: &str = "Show details";
 static COPY_ENTRIES: &str = "Copy entries";
+static REVEAL_ENTRIES: &str = "Reveal entries";
 static MOVE_ENTRIES: &str = "Move entries";
 static DELETE_ENTRIES: &str = "Delete entries";
 
-#[derive(Debug)]
-pub enum FsRsError {
-    SearchError(SearchError),
-    Inquire(InquireError),
-    Crossterm(std::io::Error),
-}
+
 
 fn main() -> Result<(), FsRsError> {
     let cli = Cli::parse();
+
+    if cli.search_paths.len() == 0 {
+        print_error("You have to provide atleast one search path!")?;
+        return Ok(());
+    }
 
     run(cli)
 }
@@ -61,17 +58,27 @@ fn run_search(
 fn create_filters(cli: &Cli) -> Vec<Box<dyn SearchFilter>> {
     let mut filters: Vec<Box<dyn SearchFilter>> = Vec::new();
 
-    if let Some(names) = cli.names.clone() {
-        let names: Vec<&str> = names.iter().map(|x| x.as_str()).collect();
-        let name_filter = FilenameFilter::new(&names);
-        filters.push(Box::new(name_filter));
-    }
+    if let Some(search_v) = &cli.search {
+        let search_filters: (Box<dyn SearchFilter>, Box<dyn SearchFilter>) = match search_v {
+            Search::Name(args) => {
+                let names: Vec<&str> = args.names.iter().map(|x| x.as_str()).collect();
+                let name_filter = FilenameFilter::new(&names, args.match_option, args.case_sensisitiv);
+                let result_type_filter = EntryTypeFilter::new(args.show_results);
 
-    if let Some(words) = cli.words.clone() {
-        let words: Vec<&str> = words.iter().map(|x| x.as_str()).collect();
-        let file_content_filter = FileContentFilter::new(&words);
-        filters.push(Box::new(file_content_filter));
-    }
+                (Box::new(name_filter), Box::new(result_type_filter))
+            }
+            Search::Content(args) => {
+                let words: Vec<&str> = args.names.iter().map(|x| x.as_str()).collect();
+                let file_content_filter = FileContentFilter::new(&words, args.match_option, args.case_sensisitiv);
+                let result_type_filter = EntryTypeFilter::new(args.show_results);
+
+                (Box::new(file_content_filter), Box::new(result_type_filter))
+            },
+        };
+
+        filters.push(search_filters.0);
+        filters.push(search_filters.1);
+    } 
 
     filters
 }
@@ -89,166 +96,34 @@ fn display_results(
 
     let options = vec![
         OPEN_ENTRY,
+        REVEAL_ENTRIES,
         SHOW_DETAILS,
         COPY_ENTRIES,
         MOVE_ENTRIES,
         DELETE_ENTRIES,
     ];
 
-    let entry_action = Select::new("What do you want to do?", options)
-        .prompt()
-        .map_err(|x| FsRsError::Inquire(x))?;
-
-    match entry_action {
-        "Open entries" => open_files(results, max_results),
-        "Show details" => show_details(results, max_results),
-        "Copy entries" => copy_entries(results, max_results),
-        "Move entries" => move_entries(results, max_results),
-        "Delete entries" => delete_entries(results, max_results),
-        _ => print_error("Invalid option entered!"),
-    }
-}
-
-fn open_files(results: Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-    let selected = MultiSelect::new("Which entries do you want to open?", results)
-        .with_page_size(max_results)
-        .prompt_skippable()
-        .map_err(|x| FsRsError::Inquire(x))?;
-
-    if let Some(entries) = selected {
-        for entry in entries.iter() {
-            print_search_result(entry)?;
+    loop {
+        let entry_action = Select::new("What do you want to do?", options.clone())
+        .prompt_skippable()?;
+    
+        if let Some(action) = entry_action {
+            match action {
+                "Open entries" => OpenEntriesDialogue::show(&results, max_results),
+                "Reveal entries" => RevealEntriesDialogue::show(&results, max_results),
+                "Show details" => ShowEntriesDialogue::show(&results, max_results),
+                "Copy entries" => CopyEntriesDialogue::show(&results, max_results),
+                "Move entries" => MoveEntriesDialogue::show(&results, max_results),
+                "Delete entries" => DeleteEntriesDialogue::show(&results, max_results),
+                _ => print_error("Invalid option entered!"),
+            }?;
         }
+
+        match Confirm::new("Do you want to do additional things?").with_default(true).prompt() {
+            Ok(res) => if !res {
+                return Ok(())
+            },
+            Err(_) => return Ok(()),
+        };
     }
-
-    Ok(())
-}
-
-fn show_details(results: Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-    let selected = MultiSelect::new("Which entries do you want to see details from?", results)
-        .with_page_size(max_results)
-        .prompt_skippable()
-        .map_err(|x| FsRsError::Inquire(x))?;
-
-    if let Some(entries) = selected {
-        for entry in entries.iter() {
-            print_search_result(entry)?;
-        }
-    }
-
-    Ok(())
-}
-
-fn copy_entries(results: Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-    let selected = MultiSelect::new("Which entries do you want to copy?", results)
-        .with_page_size(max_results)
-        .prompt_skippable()
-        .map_err(|x| FsRsError::Inquire(x))?;
-
-    if let Some(entries) = selected {
-        for entry in entries.iter() {
-            print_search_result(entry)?;
-        }
-    }
-
-    Ok(())
-}
-
-fn move_entries(results: Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-    let selected = MultiSelect::new("Which entries do you want to move?", results)
-        .with_page_size(max_results)
-        .prompt_skippable()
-        .map_err(|x| FsRsError::Inquire(x))?;
-
-    if let Some(entries) = selected {
-        for entry in entries.iter() {
-            print_search_result(entry)?;
-        }
-    }
-
-    Ok(())
-}
-
-fn delete_entries(results: Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-    let selected = MultiSelect::new("Which entries do you want to see delete?", results)
-        .with_page_size(max_results)
-        .prompt_skippable()
-        .map_err(|x| FsRsError::Inquire(x))?;
-
-    if let Some(entries) = selected {
-        for entry in entries.iter() {
-            print_warning(&format!("Attempting to delete: {:?}!", entry.path()))?;
-            let confirmation = Confirm::new("Are you sure?")
-                .with_default(false)
-                .prompt()
-                .map_err(|x| FsRsError::Inquire(x))?;
-
-            if confirmation {
-                match entry {
-                    SearchResult::Directory {
-                        path,
-                        name: _,
-                        metadata: _,
-                    } => fs::remove_dir_all(path).map_err(|x| FsRsError::Crossterm(x)),
-                    SearchResult::File {
-                        path,
-                        name: _,
-                        metadata: _,
-                    } => fs::remove_file(path).map_err(|x| FsRsError::Crossterm(x)),
-                    SearchResult::SymLink {
-                        path,
-                        name: _,
-                        metadata: _,
-                    } => fs::remove_file(path).map_err(|x| FsRsError::Crossterm(x)),
-                }?;
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn print_error(message: &str) -> Result<(), FsRsError> {
-    print_log(message, Color::Red)
-}
-
-fn print_warning(message: &str) -> Result<(), FsRsError> {
-    print_log(message, Color::Yellow)
-}
-
-fn print_log(message: &str, color: Color) -> Result<(), FsRsError> {
-    execute!(
-        stdout(),
-        SetForegroundColor(color),
-        Print(message),
-        Print("\n"),
-        ResetColor
-    )
-    .map_err(|x| FsRsError::Crossterm(x))
-}
-
-fn print_message(message: &str) -> Result<(), FsRsError> {
-    print_log(message, Color::Grey)
-}
-
-fn print_search_result(search_result: &SearchResult) -> Result<(), FsRsError> {
-    let message = match search_result {
-        SearchResult::Directory {
-            path,
-            name: _,
-            metadata: _,
-        } => format!("(D) Opening: {:?}", path),
-        SearchResult::File {
-            path,
-            name: _,
-            metadata: _,
-        } => format!("(F) Opening: {:?}", path),
-        SearchResult::SymLink {
-            path,
-            name: _,
-            metadata: _,
-        } => format!("(S) Opening: {:?}", path),
-    };
-
-    print_message(&message)
 }

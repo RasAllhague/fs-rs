@@ -10,3 +10,4 @@ walkdir = "2.3.3"
 clap = { version = "4.3.8", features = ["derive"] }
 crossterm = "0.26.1"
 inquire = "0.6.2"
+opener = { version = "0.6.1", features = ["reveal"] }

@@ -27,21 +27,26 @@ impl FileSearcher {
         WalkDir::new(path)
             .max_depth(self.max_depth)
             .into_iter()
-            .filter(|x| x.is_ok())
-            .map(|e| e.unwrap())
+            .filter_map(|x| x.ok())
             .filter(|e| self.check_filters(e))
-            .map(|e| map_filetype(e))
+            .map(map_filetype)
             .collect()
     }
 
     fn check_filters(&self, dir_entry: &DirEntry) -> bool {
+        if self.filters.len() == 0 {
+            return true;
+        }
+
+        let mut filter_result = true;
+
         for filter in self.filters.iter() {
-            if filter.check_filter(dir_entry) {
-                return true;
+            if !filter.check_filter(dir_entry) {
+                filter_result = false;
             }
         }
 
-        return false;
+        filter_result
     }
 }
 
