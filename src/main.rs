@@ -83,6 +83,7 @@ fn print_message(message: &str) {
         stdout(),
         SetForegroundColor(Color::Grey),
         Print(message),
+        Print("\n"),
         ResetColor
     )
     .unwrap();
