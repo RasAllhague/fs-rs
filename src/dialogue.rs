@@ -27,7 +27,7 @@ impl CopyEntriesDialogue {
             .prompt_skippable()?;
 
         if let Some(entries) = selected {
-            for entry in entries.iter() {
+            for entry in &entries {
                 Self::copy_entry(entry)?;
             }
         }
@@ -52,7 +52,7 @@ impl CopyEntriesDialogue {
                     metadata: _,
                 } => {
                     if let Err(why) = copy(path, file_name) {
-                        print_error(&format!("Could not copy file: {}", why))?;
+                        print_error(&format!("Could not copy file: {why}"))?;
                     }
                 }
                 SearchResult::SymLink {
@@ -79,7 +79,7 @@ impl ShowEntriesDialogue {
         .prompt_skippable()?;
 
         if let Some(entries) = selected {
-            for entry in entries.iter() {
+            for entry in &entries {
                 print_search_result(entry)?;
             }
         }
@@ -95,7 +95,7 @@ impl OpenEntriesDialogue {
             .prompt_skippable()?;
 
         if let Some(entries) = selected {
-            for entry in entries.iter() {
+            for entry in &entries {
                 print_warning(&format!("Opening: {:?}!", entry.path()))?;
 
                 if let Err(why) = opener::open(entry.path()) {
@@ -119,7 +119,7 @@ impl RevealEntriesDialogue {
             .prompt_skippable()?;
 
         if let Some(entries) = selected {
-            for entry in entries.iter() {
+            for entry in &entries {
                 print_warning(&format!("Opening: {:?}!", entry.path()))?;
 
                 if let Err(why) = opener::reveal(entry.path()) {
@@ -143,7 +143,7 @@ impl MoveEntriesDialogue {
             .prompt_skippable()?;
 
         if let Some(entries) = selected {
-            for entry in entries.iter() {
+            for entry in &entries {
                 Self::move_entry(entry)?;
             }
         }
@@ -168,7 +168,7 @@ impl MoveEntriesDialogue {
                     metadata: _,
                 } => match copy(path, file_name) {
                     Ok(_) => remove_file(path)?,
-                    Err(why) => print_error(&format!("Could not move file: {}", why))?,
+                    Err(why) => print_error(&format!("Could not move file: {why}"))?,
                 },
                 SearchResult::SymLink {
                     path: _,
@@ -192,7 +192,7 @@ impl DeleteEntriesDialogue {
                 .prompt_skippable()?;
 
         if let Some(entries) = selected {
-            for entry in entries.iter() {
+            for entry in &entries {
                 Self::delete_entry(entry)?;
             }
         }
@@ -215,8 +215,8 @@ impl DeleteEntriesDialogue {
                     path,
                     name: _,
                     metadata: _,
-                } => fs::remove_file(path),
-                SearchResult::SymLink {
+                }
+                | SearchResult::SymLink {
                     path,
                     name: _,
                     metadata: _,

@@ -30,14 +30,14 @@ fn main() -> Result<(), FsRsError> {
         return Ok(());
     }
 
-    run(cli)
+    run(&cli)
 }
 
-fn run(cli: Cli) -> Result<(), FsRsError> {
-    let filters = create_filters(&cli);
-    let (results, duration) = run_search(filters, &cli)?;
+fn run(cli: &Cli) -> Result<(), FsRsError> {
+    let filters = create_filters(cli);
+    let (results, duration) = run_search(filters, cli)?;
 
-    display_results(results, duration, cli.max_results)
+    display_results(&results, duration, cli.max_results)
 }
 
 fn run_search(
@@ -48,7 +48,7 @@ fn run_search(
 
     print_message("Searching...")?;
 
-    let paths: Vec<&str> = cli.search_paths.iter().map(|x| x.as_str()).collect();
+    let paths: Vec<&str> = cli.search_paths.iter().map(std::string::String::as_str).collect();
 
     let start = Instant::now();
     let results = searcher.search_paths(&paths);
@@ -65,7 +65,7 @@ fn create_filters(cli: &Cli) -> Vec<Box<dyn SearchFilter>> {
     if let Some(search_v) = &cli.search {
         let search_filters: (Box<dyn SearchFilter>, Box<dyn SearchFilter>) = match search_v {
             Search::Name(args) => {
-                let names: Vec<&str> = args.names.iter().map(|x| x.as_str()).collect();
+                let names: Vec<&str> = args.names.iter().map(std::string::String::as_str).collect();
                 let name_filter =
                     FilenameFilter::new(&names, args.match_option, args.case_sensisitiv);
                 let result_type_filter = EntryTypeFilter::new(args.show_results);
@@ -73,7 +73,7 @@ fn create_filters(cli: &Cli) -> Vec<Box<dyn SearchFilter>> {
                 (Box::new(name_filter), Box::new(result_type_filter))
             }
             Search::Content(args) => {
-                let words: Vec<&str> = args.names.iter().map(|x| x.as_str()).collect();
+                let words: Vec<&str> = args.names.iter().map(std::string::String::as_str).collect();
                 let file_content_filter =
                     FileContentFilter::new(&words, args.match_option, args.case_sensisitiv);
                 let result_type_filter = EntryTypeFilter::new(args.show_results);
@@ -90,7 +90,7 @@ fn create_filters(cli: &Cli) -> Vec<Box<dyn SearchFilter>> {
 }
 
 fn display_results(
-    results: Vec<SearchResult>,
+    results: &[SearchResult],
     duration: std::time::Duration,
     max_results: usize,
 ) -> Result<(), FsRsError> {
@@ -115,12 +115,12 @@ fn display_results(
 
         if let Some(action) = entry_action {
             match action {
-                "Open entries" => OpenEntriesDialogue::show(&results, max_results),
-                "Reveal entries" => RevealEntriesDialogue::show(&results, max_results),
-                "Show details" => ShowEntriesDialogue::show(&results, max_results),
-                "Copy entries" => CopyEntriesDialogue::show(&results, max_results),
-                "Move entries" => MoveEntriesDialogue::show(&results, max_results),
-                "Delete entries" => DeleteEntriesDialogue::show(&results, max_results),
+                "Open entries" => OpenEntriesDialogue::show(results, max_results),
+                "Reveal entries" => RevealEntriesDialogue::show(results, max_results),
+                "Show details" => ShowEntriesDialogue::show(results, max_results),
+                "Copy entries" => CopyEntriesDialogue::show(results, max_results),
+                "Move entries" => MoveEntriesDialogue::show(results, max_results),
+                "Delete entries" => DeleteEntriesDialogue::show(results, max_results),
                 _ => print_error("Invalid option entered!"),
             }?;
         }

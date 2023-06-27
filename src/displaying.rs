@@ -36,17 +36,17 @@ pub fn print_search_result(search_result: &SearchResult) -> Result<(), FsRsError
             path,
             name: _,
             metadata: _,
-        } => format!("(D) Opening: {:?}", path),
+        } => format!("(D) Opening: {path:?}"),
         SearchResult::File {
             path,
             name: _,
             metadata: _,
-        } => format!("(F) Opening: {:?}", path),
+        } => format!("(F) Opening: {path:?}"),
         SearchResult::SymLink {
             path,
             name: _,
             metadata: _,
-        } => format!("(S) Opening: {:?}", path),
+        } => format!("(S) Opening: {path:?}"),
     };
 
     print_message(&message)

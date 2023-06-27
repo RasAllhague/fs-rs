@@ -26,12 +26,12 @@ pub struct EntryTypeFilter {
 
 impl FilenameFilter {
     pub fn new(file_names: &[&str], match_option: MatchOption, case_sensitiv: bool) -> Self {
-        let file_names = file_names.iter().map(|x| x.to_string()).collect();
+        let file_names = file_names.iter().map(ToString::to_string).collect();
 
         Self {
             file_names,
-            case_sensitiv,
             match_option,
+            case_sensitiv,
         }
     }
 }
@@ -41,30 +41,33 @@ impl SearchFilter for FilenameFilter {
         let name = dir_entry.file_name().to_str();
 
         match name {
-            Some(n) => match self.case_sensitiv {
-                true => match self.match_option {
-                    MatchOption::All => self.file_names.iter().all(|x| n.contains(x)),
-                    MatchOption::Any => self.file_names.iter().any(|x| n.contains(x)),
-                    MatchOption::None => !self.file_names.iter().any(|x| n.contains(x)),
-                },
-                false => match self.match_option {
-                    MatchOption::All => self.file_names.iter().all(|x| {
-                        n.to_lowercase()
-                            .as_str()
-                            .contains(x.to_lowercase().as_str())
-                    }),
-                    MatchOption::Any => self.file_names.iter().any(|x| {
-                        n.to_lowercase()
-                            .as_str()
-                            .contains(x.to_lowercase().as_str())
-                    }),
-                    MatchOption::None => !self.file_names.iter().any(|x| {
-                        n.to_lowercase()
-                            .as_str()
-                            .contains(x.to_lowercase().as_str())
-                    }),
-                },
-            },
+            Some(n) => {
+                if self.case_sensitiv {
+                    match self.match_option {
+                        MatchOption::All => self.file_names.iter().all(|x| n.contains(x)),
+                        MatchOption::Any => self.file_names.iter().any(|x| n.contains(x)),
+                        MatchOption::None => !self.file_names.iter().any(|x| n.contains(x)),
+                    }
+                } else {
+                    match self.match_option {
+                        MatchOption::All => self.file_names.iter().all(|x| {
+                            n.to_lowercase()
+                                .as_str()
+                                .contains(x.to_lowercase().as_str())
+                        }),
+                        MatchOption::Any => self.file_names.iter().any(|x| {
+                            n.to_lowercase()
+                                .as_str()
+                                .contains(x.to_lowercase().as_str())
+                        }),
+                        MatchOption::None => !self.file_names.iter().any(|x| {
+                            n.to_lowercase()
+                                .as_str()
+                                .contains(x.to_lowercase().as_str())
+                        }),
+                    }
+                }
+            }
             None => false,
         }
     }
@@ -72,26 +75,27 @@ impl SearchFilter for FilenameFilter {
 
 impl FileContentFilter {
     pub fn new(words: &[&str], match_option: MatchOption, case_sensitiv: bool) -> Self {
-        let words = words.iter().map(|x| x.to_string()).collect();
+        let words = words.iter().map(ToString::to_string).collect();
 
         Self {
             words,
-            case_sensitiv,
             match_option,
+            case_sensitiv,
         }
     }
 
     fn check_content(&self, file_path: &str) -> bool {
-        match self.case_sensitiv {
-            true => match fs::read_to_string(file_path) {
+        if self.case_sensitiv {
+            match fs::read_to_string(file_path) {
                 Ok(c) => match self.match_option {
                     MatchOption::All => self.words.iter().all(|x| c.contains(x)),
                     MatchOption::Any => self.words.iter().any(|x| c.contains(x)),
                     MatchOption::None => !self.words.iter().any(|x| c.contains(x)),
                 },
                 Err(_) => false,
-            },
-            false => match fs::read_to_string(file_path) {
+            }
+        } else {
+            match fs::read_to_string(file_path) {
                 Ok(c) => match self.match_option {
                     MatchOption::All => self.words.iter().all(|x| {
                         c.to_lowercase()
@@ -110,7 +114,7 @@ impl FileContentFilter {
                     }),
                 },
                 Err(_) => false,
-            },
+            }
         }
     }
 }
@@ -125,6 +129,7 @@ impl SearchFilter for FileContentFilter {
 }
 
 impl EntryTypeFilter {
+    #[must_use]
     pub fn new(entry_type: ShowResults) -> Self {
         Self {
             result_type: entry_type,

@@ -15,10 +15,12 @@ pub struct FileSearcher {
 }
 
 impl FileSearcher {
+    #[must_use]
     pub fn new(filters: Vec<Box<dyn SearchFilter>>, max_depth: usize) -> Self {
         Self { filters, max_depth }
     }
 
+    #[must_use]
     pub fn search_paths(&self, paths: &[&str]) -> Vec<SearchResult> {
         paths.iter().flat_map(|x| self.search_path(x)).collect()
     }
@@ -27,9 +29,9 @@ impl FileSearcher {
         WalkDir::new(path)
             .max_depth(self.max_depth)
             .into_iter()
-            .filter_map(|x| x.ok())
+            .filter_map(Result::ok)
             .filter(|e| self.check_filters(e))
-            .map(map_filetype)
+            .map(|x| map_filetype(&x))
             .collect()
     }
 
@@ -40,7 +42,7 @@ impl FileSearcher {
 
         let mut filter_result = true;
 
-        for filter in self.filters.iter() {
+        for filter in &self.filters {
             if !filter.check_filter(dir_entry) {
                 filter_result = false;
             }
@@ -50,7 +52,7 @@ impl FileSearcher {
     }
 }
 
-fn map_filetype(dir_entry: DirEntry) -> SearchResult {
+fn map_filetype(dir_entry: &DirEntry) -> SearchResult {
     if dir_entry.file_type().is_file() {
         return SearchResult::File {
             path: dir_entry.path().as_os_str().to_os_string(),
@@ -94,19 +96,18 @@ pub enum SearchResult {
 }
 
 impl SearchResult {
+    #[must_use]
     pub fn path(&self) -> OsString {
         match self {
             SearchResult::Directory {
                 path,
                 name: _,
                 metadata: _,
-            } => path.clone(),
-            SearchResult::File {
+            } | SearchResult::File {
                 path,
                 name: _,
                 metadata: _,
-            } => path.clone(),
-            SearchResult::SymLink {
+            } | SearchResult::SymLink {
                 path,
                 name: _,
                 metadata: _,
