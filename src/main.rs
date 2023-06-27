@@ -177,8 +177,8 @@ fn delete_entries(results: Vec<SearchResult>, max_results: usize) -> Result<(), 
 
     if let Some(entries) = selected {
         for entry in entries.iter() {
-            print_warning(&format!("Attempting to delete: {:?}", entry.path()))?;
-            let confirmation = Confirm::new("Are you sure you want to delete this file?")
+            print_warning(&format!("Attempting to delete: {:?}!", entry.path()))?;
+            let confirmation = Confirm::new("Are you sure?")
                 .with_default(false)
                 .prompt()
                 .map_err(|x| FsRsError::Inquire(x))?;
