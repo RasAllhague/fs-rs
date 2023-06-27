@@ -42,7 +42,7 @@ impl CopyEntriesDialogue {
         if let Some(file_name) = move_to {
             match entry {
                 SearchResult::Directory {
-                    path,
+                    path: _,
                     name: _,
                     metadata: _,
                 } => todo!(),
@@ -56,7 +56,7 @@ impl CopyEntriesDialogue {
                     }
                 }
                 SearchResult::SymLink {
-                    path,
+                    path: _,
                     name: _,
                     metadata: _,
                 } => todo!(),
@@ -158,7 +158,7 @@ impl MoveEntriesDialogue {
         if let Some(file_name) = move_to {
             match entry {
                 SearchResult::Directory {
-                    path,
+                    path: _,
                     name: _,
                     metadata: _,
                 } => todo!(),
@@ -171,7 +171,7 @@ impl MoveEntriesDialogue {
                     Err(why) => print_error(&format!("Could not move file: {}", why))?,
                 },
                 SearchResult::SymLink {
-                    path,
+                    path: _,
                     name: _,
                     metadata: _,
                 } => todo!(),
