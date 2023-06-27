@@ -50,9 +50,11 @@ impl CopyEntriesDialogue {
                     path,
                     name: _,
                     metadata: _,
-                } => if let Err(why) = copy(path, file_name) {
-                    print_error(&format!("Could not copy file: {}", why))?;
-                },
+                } => {
+                    if let Err(why) = copy(path, file_name) {
+                        print_error(&format!("Could not copy file: {}", why))?;
+                    }
+                }
                 SearchResult::SymLink {
                     path,
                     name: _,
@@ -69,9 +71,12 @@ impl CopyEntriesDialogue {
 
 impl ShowEntriesDialogue {
     pub fn show(results: &Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-        let selected = MultiSelect::new("Which entries do you want to see details from?", results.clone())
-            .with_page_size(max_results)
-            .prompt_skippable()?;
+        let selected = MultiSelect::new(
+            "Which entries do you want to see details from?",
+            results.clone(),
+        )
+        .with_page_size(max_results)
+        .prompt_skippable()?;
 
         if let Some(entries) = selected {
             for entry in entries.iter() {
@@ -94,9 +99,10 @@ impl OpenEntriesDialogue {
                 print_warning(&format!("Opening: {:?}!", entry.path()))?;
 
                 if let Err(why) = opener::open(entry.path()) {
-                    print_error(&format!("Failed to open entry with default program, why {why}."))?;
-                }
-                else {
+                    print_error(&format!(
+                        "Failed to open entry with default program, why {why}."
+                    ))?;
+                } else {
                     print_message("Opened entry.")?;
                 }
             }
@@ -117,9 +123,10 @@ impl RevealEntriesDialogue {
                 print_warning(&format!("Opening: {:?}!", entry.path()))?;
 
                 if let Err(why) = opener::reveal(entry.path()) {
-                    print_error(&format!("Failed to open entry with default program, why {why}."))?;
-                }
-                else {
+                    print_error(&format!(
+                        "Failed to open entry with default program, why {why}."
+                    ))?;
+                } else {
                     print_message("Opened entry.")?;
                 }
             }
@@ -179,9 +186,10 @@ impl MoveEntriesDialogue {
 
 impl DeleteEntriesDialogue {
     pub fn show(results: &Vec<SearchResult>, max_results: usize) -> Result<(), FsRsError> {
-        let selected = MultiSelect::new("Which entries do you want to see delete?", results.clone())
-            .with_page_size(max_results)
-            .prompt_skippable()?;
+        let selected =
+            MultiSelect::new("Which entries do you want to see delete?", results.clone())
+                .with_page_size(max_results)
+                .prompt_skippable()?;
 
         if let Some(entries) = selected {
             for entry in entries.iter() {

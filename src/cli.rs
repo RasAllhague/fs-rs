@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use clap::{command, Parser, Subcommand, ValueEnum, Args};
+use clap::{command, Args, Parser, Subcommand, ValueEnum};
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about)]
@@ -32,7 +32,7 @@ pub struct SearchTypeArgs {
     #[arg(short, long)]
     pub order_by: Option<OrderBy>,
     #[arg(short, long, default_value_t = ShowResults::All)]
-    pub show_results: ShowResults
+    pub show_results: ShowResults,
 }
 
 #[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
@@ -55,7 +55,7 @@ pub enum ShowResults {
     All,
     Directory,
     File,
-    SymLink
+    SymLink,
 }
 
 impl Display for MatchOption {

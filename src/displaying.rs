@@ -1,6 +1,9 @@
 use std::io::stdout;
 
-use crossterm::{style::{Color, SetForegroundColor, Print, ResetColor}, execute};
+use crossterm::{
+    execute,
+    style::{Color, Print, ResetColor, SetForegroundColor},
+};
 
 use crate::{error::FsRsError, search::SearchResult};
 
