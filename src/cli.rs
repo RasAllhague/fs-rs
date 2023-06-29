@@ -31,8 +31,8 @@ pub struct SearchTypeArgs {
     pub match_option: MatchOption,
     #[arg(short, long)]
     pub order_by: Option<OrderBy>,
-    #[arg(short, long, default_value_t = ShowResults::All)]
-    pub show_results: ShowResults,
+    #[arg(short, long, default_value_t = ResultFilter::All)]
+    pub result_filter: ResultFilter,
 }
 
 #[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
@@ -51,7 +51,7 @@ pub enum OrderBy {
 }
 
 #[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum ShowResults {
+pub enum ResultFilter {
     All,
     Directory,
     File,
@@ -68,13 +68,13 @@ impl Display for MatchOption {
     }
 }
 
-impl Display for ShowResults {
+impl Display for ResultFilter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ShowResults::All => write!(f, "all"),
-            ShowResults::Directory => write!(f, "directory"),
-            ShowResults::File => write!(f, "file"),
-            ShowResults::SymLink => write!(f, "symlink"),
+            ResultFilter::All => write!(f, "all"),
+            ResultFilter::Directory => write!(f, "directory"),
+            ResultFilter::File => write!(f, "file"),
+            ResultFilter::SymLink => write!(f, "symlink"),
         }
     }
 }

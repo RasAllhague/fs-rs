@@ -2,7 +2,7 @@ use std::fs;
 
 use walkdir::DirEntry;
 
-use crate::cli::{MatchOption, ShowResults};
+use crate::cli::{MatchOption, ResultFilter};
 
 pub trait SearchFilter {
     fn check_filter(&self, dir_entry: &DirEntry) -> bool;
@@ -21,7 +21,7 @@ pub struct FileContentFilter {
 }
 
 pub struct EntryTypeFilter {
-    result_type: ShowResults,
+    result_type: ResultFilter,
 }
 
 impl FilenameFilter {
@@ -130,7 +130,7 @@ impl SearchFilter for FileContentFilter {
 
 impl EntryTypeFilter {
     #[must_use]
-    pub fn new(entry_type: ShowResults) -> Self {
+    pub fn new(entry_type: ResultFilter) -> Self {
         Self {
             result_type: entry_type,
         }
@@ -140,10 +140,10 @@ impl EntryTypeFilter {
 impl SearchFilter for EntryTypeFilter {
     fn check_filter(&self, dir_entry: &DirEntry) -> bool {
         match self.result_type {
-            ShowResults::All => true,
-            ShowResults::Directory => dir_entry.file_type().is_dir(),
-            ShowResults::File => dir_entry.file_type().is_file(),
-            ShowResults::SymLink => dir_entry.file_type().is_symlink(),
+            ResultFilter::All => true,
+            ResultFilter::Directory => dir_entry.file_type().is_dir(),
+            ResultFilter::File => dir_entry.file_type().is_file(),
+            ResultFilter::SymLink => dir_entry.file_type().is_symlink(),
         }
     }
 }
